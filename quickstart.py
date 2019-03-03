@@ -37,24 +37,24 @@ def authorize():
             pickle.dump(creds, token)
     return creds
 
-def create_google_datasheet(service):
-    metadata={'name': 'Data.csv',
-              'mimeType': 'application/vnd.google-apps.spreadsheet'
-    }
-    media = MediaFileUpload(FILENAME,
-                        mimetype='text/csv',
-                        resumable=True)
-
-    try:
-        results = service.files().create(fields='id', body=metadata,
-        media_body=media).execute()
-    except HttpError, error:
-        return create_google_datasheet(service)
-
-    if results:
-        print('Uploaded %s' % 'Data.csv')
-
-    return results['id']
+# def create_google_datasheet(service):
+#     metadata={'name': 'Data.csv',
+#               'mimeType': 'application/vnd.google-apps.spreadsheet'
+#     }
+#     media = MediaFileUpload(FILENAME,
+#                         mimetype='text/csv',
+#                         resumable=True)
+#
+#     try:
+#         results = service.files().create(fields='id', body=metadata,
+#         media_body=media).execute()
+#     except HttpError, error:
+#         return create_google_datasheet(service)
+#
+#     if results:
+#         print('Uploaded %s' % 'Data.csv')
+#
+#     return results['id']
 
 def update_data(service, file_id):
     metadata={'name': 'Data.csv',
@@ -72,22 +72,22 @@ def update_data(service, file_id):
     if res:
         print('Updated %s' % 'Data.csv')
 
-def get_data(service, file_id):
-    try:
-        res = service.files().export(fileId=file_id, mimeType='text/csv').execute()
-    except HttpError, error:
-        get_data(service, file_id)
-
-    if res:
-        print('Retrieved %s' % 'Data.csv')
-        print(res)
+# def get_data(service, file_id):
+#     try:
+#         res = service.files().export(fileId=file_id, mimeType='text/csv').execute()
+#     except HttpError, error:
+#         get_data(service, file_id)
+#
+#     if res:
+#         print('Retrieved %s' % 'Data.csv')
+#         print(res)
 
 def main():
     """ Authorize the drive to be accessed and run the Google Drive api service. """
     creds = authorize();
     service = build('drive', 'v3', credentials=creds)
 
-    """ Create the initial datasheet to store data on. """
+    # """ Create the initial datasheet to store data on. """
     # file_id = create_google_datasheet(service)
 
     """ Write to said datasheet continuously every 5 seconds. """
@@ -95,7 +95,7 @@ def main():
         update_data(service, FILE_ID)
         time.sleep(5)
 
-    """ Retrieve content from written datasheet """
+    # """ Retrieve content from written datasheet """
     # get_data(service, FILE_ID)
 
 if __name__ == '__main__':
