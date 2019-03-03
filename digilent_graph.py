@@ -41,17 +41,6 @@ app = QtGui.QApplication([])
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
-#auth.authenticate_user()
-#gauth = GoogleAuth()
-#gauth.credentials = GoogleCredentials.get_application_default()
-#drive = GoogleDrive(gauth)
-
-#dl = drive.CreateFile({'id':'146Kd9q8CTgEKwCQr__2dXJtsWT7iAPCT'})
-#dl.GetContentFile('data.csv')
-
-#response = requests.get('https://drive.google.com/file/d/146Kd9q8CTgEKwCQr__2dXJtsWT7iAPCT/view?usp=sharing')
-#assert response.status_code == 200, 'Wrong status code'
-#decoded = response.content.decode('utf-8')
 
 def authorize():
     creds = None
@@ -75,31 +64,47 @@ def authorize():
     return creds
 
 def get_data():
+    ptr = 0
+    global csv_line_idx
     creds = authorize();
     service = build('drive', 'v3', credentials=creds)
-    file_id = '1-BRQv2TDzlL0xEs_RV7mLP1gDlOt713fOD586uinUCM'
+    file_id = '1HU_ahCgcivR51r-by7CdfBLhrCdyBnKqaDHfYsEUl0g'
     try:
         res = service.files().export(fileId=file_id, mimeType='text/csv').execute()
     except HttpError, error:
         print(error)
     if res:
-        print(res)
+        for line in res.split('\n'):
+            items = line.split(',')
+            if (ptr >= csv_line_idx):
+                if ptr != 0:
+                    try:
+                        data1.append(float(items[1]))
+                        data2.append(float(items[2]))
+                    except ValueError:
+                        print("boo")
+                csv_line_idx += 1
+            ptr += 1
 
-get_data()
+# get_data()
 
-csv_timer = QtCore.QTimer()
-csv_timer.timeout.connect(get_data)
-csv_timer.start(1000)
+data_timer = QtCore.QTimer()
+data_timer.timeout.connect(get_data)
+data_timer.start(1000)
 
 #print decoded.splitlines()
 
-with open(sys.argv[1]) as csv_file:
-    csv_reader = csv.reader(csv_file, delimiter=',')
-    for line in csv_reader:
-        data1.append(float(line[1]))
-        data2.append(float(line[2]))
-        csv_line_idx += 1
-    csv_file.close()
+# with open(sys.argv[1]) as csv_file:
+#     csv_reader = csv.reader(csv_file, delimiter=',')
+#     for line in csv_reader:
+#         if csv_line_idx != 0:
+#             try:
+#                 data1.append(float(line[1]))
+#                 data2.append(float(line[2]))
+#             except ValueError:
+#                 print("boo")
+#         csv_line_idx += 1
+#     csv_file.close()
 
 def csv_update():
     ptr = 0
@@ -116,7 +121,7 @@ def csv_update():
 
 csv_timer = QtCore.QTimer()
 csv_timer.timeout.connect(csv_update)
-csv_timer.start(200)
+# csv_timer.start(200)
 
 def csv_network():
     ready = ready = select.select([server_socket], [], [], 1)
