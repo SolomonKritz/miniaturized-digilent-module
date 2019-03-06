@@ -22,12 +22,16 @@ import select
 import pickle
 import time
 import os.path
+import serial
 from apiclient.http import MediaFileUpload
 from apiclient.errors import HttpError
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 import functools
+
+SERIAL_PORT = '/dev/cu.usbmodem14101'
+FILE_ID = '1HU_ahCgcivR51r-by7CdfBLhrCdyBnKqaDHfYsEUl0g'
 
 data1 = []
 data2 = []
@@ -36,11 +40,8 @@ p1_op = 0
 p1_size = 20
 p2_op = 0
 p2_size = 20
+ser = serial.Serial(SERIAL_PORT, 19200, timeout=60)  # open serial port at baudrate 19200 with timeout = 1 minute
 app = QtGui.QApplication([])
-
-
-# If modifying these scopes, delete the file token.pickle.
-SCOPES = ['https://www.googleapis.com/auth/drive.file']
 
 def authorize():
     creds = None
@@ -64,27 +65,32 @@ def authorize():
     return creds
 
 def get_data():
+    global ser
     ptr = 0
     global csv_line_idx
-    creds = authorize();
-    service = build('drive', 'v3', credentials=creds)
-    file_id = '1HU_ahCgcivR51r-by7CdfBLhrCdyBnKqaDHfYsEUl0g'
-    try:
-        res = service.files().export(fileId=file_id, mimeType='text/csv').execute()
-    except HttpError, error:
-        print(error)
-    if res:
-        for line in res.split('\n'):
-            items = line.split(',')
-            if (ptr >= csv_line_idx):
-                if ptr != 0:
-                    try:
-                        data1.append(float(items[1]))
-                        data2.append(float(items[2]))
-                    except ValueError:
-                        print("boo")
-                csv_line_idx += 1
-            ptr += 1
+    if (not ser.is_open):
+        ser.open()
+    # creds = authorize();
+    # service = build('drive', 'v3', credentials=creds)
+    # try:
+    #     res = service.files().export(fileId=FILE_ID, mimeType='text/csv').execute()
+    # except HttpError, error:
+    #     print(error)
+    line = ser.read(115200)
+    if line:
+        print(line)
+    # if res:
+    #     for line in res.split('\n'):
+    #         items = line.split(',')
+    #         if (ptr >= csv_line_idx):
+    #             if ptr != 0:
+    #                 try:
+    #                     data1.append(float(items[1]))
+    #                     data2.append(float(items[2]))
+    #                 except ValueError:
+    #                     print("boo")
+    #             csv_line_idx += 1
+    #         ptr += 1
 
 # get_data()
 
