@@ -66,7 +66,6 @@ def authorize():
 
 def get_data():
     global ser
-    ptr = 0
     global csv_line_idx
     if (not ser.is_open):
         ser.open()
@@ -76,9 +75,17 @@ def get_data():
     #     res = service.files().export(fileId=FILE_ID, mimeType='text/csv').execute()
     # except HttpError, error:
     #     print(error)
-    line = ser.read(115200)
+    line = ser.read(160)
     if line:
-        print(line)
+        items = line.split(',')
+        items.pop()
+        for item in items:
+            try:
+                print(float(item))
+                data1.append(float(item))
+            except ValueError:
+                print("boo")
+            csv_line_idx += 1
     # if res:
     #     for line in res.split('\n'):
     #         items = line.split(',')
@@ -207,17 +214,17 @@ timer1 = QtCore.QTimer()
 timer1.timeout.connect(update1)
 timer1.start(200)
 
-curve2 = p2.plot(pen='y')
-ptr2 = 0
-def update2():
-    global curve2, ptr2, p2, data2
-    if (p2_op == 0):
-        curve2.setData(data2)
-    else:
-        curve2.setData(data2[csv_line_idx-p2_size:])
-timer2 = QtCore.QTimer()
-timer2.timeout.connect(update2)
-timer2.start(200)
+# curve2 = p2.plot(pen='y')
+# ptr2 = 0
+# def update2():
+#     global curve2, ptr2, p2, data2
+#     if (p2_op == 0):
+#         curve2.setData(data2)
+#     else:
+#         curve2.setData(data2[csv_line_idx-p2_size:])
+# timer2 = QtCore.QTimer()
+# timer2.timeout.connect(update2)
+# timer2.start(200)
 
 
 

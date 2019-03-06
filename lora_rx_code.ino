@@ -79,13 +79,13 @@ void setup()
   pinMode(RFM95_RST, OUTPUT);
   digitalWrite(RFM95_RST, HIGH);
 
-  Serial.begin(115200);
+  Serial.begin(19200);
   while (!Serial) {
     delay(1);
   }
   delay(100);
 
-  Serial.println("Feather LoRa RX Test!");
+//  Serial.println("Feather LoRa RX Test!");
 
   // manual reset
   digitalWrite(RFM95_RST, LOW);
@@ -94,17 +94,17 @@ void setup()
   delay(10);
 
   while (!rf95.init()) {
-    Serial.println("LoRa radio init failed");
+//    Serial.println("LoRa radio init failed");
     while (1);
   }
-  Serial.println("LoRa radio init OK!");
+//  Serial.println("LoRa radio init OK!");
 
   // Defaults after init are 434.0MHz, modulation GFSK_Rb250Fd250, +13dbM
   if (!rf95.setFrequency(RF95_FREQ)) {
-    Serial.println("setFrequency failed");
+//    Serial.println("setFrequency failed");
     while (1);
   }
-  Serial.print("Set Freq to: "); Serial.println(RF95_FREQ);
+//  Serial.print("Set Freq to: "); Serial.println(RF95_FREQ);
 
   // Defaults after init are 434.0MHz, 13dBm, Bw = 125 kHz, Cr = 4/5, Sf = 128chips/symbol, CRC on
 
@@ -119,7 +119,7 @@ void loop()
   if (rf95.available())
   {
     // Should be a message for us now
-    uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
+    uint8_t buf[80];
     uint8_t len = sizeof(buf);
 
     if (rf95.recv(buf, &len))
@@ -127,7 +127,8 @@ void loop()
 //      digitalWrite(LED, HIGH);
 //      RH_RF95::printBuffer("Received: ", buf, len);
 //      Serial.print("Got: ");
-      Serial.println((char*)buf);
+//      Serial.println(len);
+      Serial.write((char*)buf, len);
 //      Serial.print("RSSI: ");
 //      Serial.println(rf95.lastRssi(), DEC);
 
