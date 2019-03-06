@@ -14,7 +14,7 @@ SCOPES = ['https://www.googleapis.com/auth/drive.file']
 # Absolute path name where data is collected beginning with a forward slash
 # FILENAME = '/Desktop/digilentFiles/waveforms/samples/py/Data.csv'
 FILENAME = '/Users/Evan/Documents/umd/Spring2019/google_shared_drive_api/test.csv'
-FILE_ID = '19uuK4h17mafVRSOU-A-Bqhlheck2W0McTSdo1wYIwFs'
+FILE_ID = '1-BRQv2TDzlL0xEs_RV7mLP1gDlOt713fOD586uinUCM'
 
 def authorize():
     creds = None
@@ -37,24 +37,24 @@ def authorize():
             pickle.dump(creds, token)
     return creds
 
-def create_google_datasheet(service):
-    metadata={'name': 'Data.csv',
-              'mimeType': 'application/vnd.google-apps.spreadsheet'
-    }
-    media = MediaFileUpload(FILENAME,
-                        mimetype='text/csv',
-                        resumable=True)
-
-    try:
-        results = service.files().create(fields='id', body=metadata,
-        media_body=media).execute()
-    except HttpError, error:
-        return create_google_datasheet(service)
-
-    if results:
-        print('Uploaded %s' % 'Data.csv')
-
-    return results['id']
+# def create_google_datasheet(service):
+#     metadata={'name': 'Data.csv',
+#               'mimeType': 'application/vnd.google-apps.spreadsheet'
+#     }
+#     media = MediaFileUpload(FILENAME,
+#                         mimetype='text/csv',
+#                         resumable=True)
+#
+#     try:
+#         results = service.files().create(fields='id', body=metadata,
+#         media_body=media).execute()
+#     except HttpError, error:
+#         return create_google_datasheet(service)
+#
+#     if results:
+#         print('Uploaded %s' % 'Data.csv')
+#
+#     return results['id']
 
 def update_data(service, file_id):
     metadata={'name': 'Data.csv',
@@ -72,23 +72,20 @@ def update_data(service, file_id):
     if res:
         print('Updated %s' % 'Data.csv')
 
-def get_data(service, file_id):
-    try:
-        res = service.files().export(fileId=file_id, mimeType='text/csv').execute()
-    except HttpError, error:
-        get_data(service, file_id)
-
-    if res:
-        print('Retrieved %s' % 'Data.csv')
-        print(res)
+# def get_data(service, file_id):
+#     try:
+#         res = service.files().export(fileId=file_id, mimeType='text/csv').execute()
+#     except HttpError, error:
+#         get_data(service, file_id)
+#
+#     if res:
+#         print('Retrieved %s' % 'Data.csv')
+#         print(res)
 
 def main():
-    """ Authorize the drive to be accessed. """
+    """ Authorize the drive to be accessed and run the Google Drive api service. """
     creds = authorize();
-
     service = build('drive', 'v3', credentials=creds)
-
-    # get_data(service, FILE_ID)
 
     # """ Create the initial datasheet to store data on. """
     # file_id = create_google_datasheet(service)
@@ -97,6 +94,9 @@ def main():
     while(True):
         update_data(service, FILE_ID)
         time.sleep(5)
+
+    # """ Retrieve content from written datasheet """
+    # get_data(service, FILE_ID)
 
 if __name__ == '__main__':
     main()
