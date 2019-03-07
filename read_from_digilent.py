@@ -1,19 +1,8 @@
-"""
-   DWF Python Example
-   Author:  Digilent, Inc.
-   Revision:  2018-07-19
-
-   Requires:                       
-       Python 2.7, 3
-"""
-
 from ctypes import *
 from dwfconstants import *
 import math
 import time
-import matplotlib.pyplot as plt
 import sys
-import numpy
 import serial
 
 if sys.platform.startswith("win"):
@@ -35,7 +24,7 @@ cCorrupted = c_int()
 fLost = 0
 fCorrupted = 0
 
-ser = serial.Serial('COM8', 19200)
+ser = serial.Serial('COM11', 19200)
 
 #print(DWF version
 version = create_string_buffer(16)
@@ -53,13 +42,6 @@ if hdwf.value == hdwfNone.value:
     print("failed to open device")
     quit()
 
-# print("Generating sine wave...")
-# dwf.FDwfAnalogOutNodeEnableSet(hdwf, c_int(0), AnalogOutNodeCarrier, c_bool(True))
-# dwf.FDwfAnalogOutNodeFunctionSet(hdwf, c_int(0), AnalogOutNodeCarrier, funcSine)
-# dwf.FDwfAnalogOutNodeFrequencySet(hdwf, c_int(0), AnalogOutNodeCarrier, c_double(1))
-# dwf.FDwfAnalogOutNodeAmplitudeSet(hdwf, c_int(0), AnalogOutNodeCarrier, c_double(2))
-# dwf.FDwfAnalogOutConfigure(hdwf, c_int(0), c_bool(True))
-
 #set up acquisition
 dwf.FDwfAnalogInChannelEnableSet(hdwf, c_int(0), c_bool(True))
 dwf.FDwfAnalogInChannelRangeSet(hdwf, c_int(0), c_double(5))
@@ -76,12 +58,6 @@ dwf.FDwfAnalogInConfigure(hdwf, c_int(0), c_int(1))
 cSamples = 0
 cStart = 0;
 
-# plt.axis([0, len(rgdSamples), -6, 6])
-# plt.ion()
-# hl, = plt.plot([], [])
-# hl.set_xdata(range(0, len(rgdSamples)))
-
-
 while True:
     dwf.FDwfAnalogInStatus(hdwf, c_int(1), byref(sts))
     if cSamples == 0 and (sts == DwfStateConfig or sts == DwfStatePrefill or sts == DwfStateArmed) :
@@ -94,10 +70,8 @@ while True:
 
     if cLost.value :
         fLost = 1
-        print("LOST\n");
     if cCorrupted.value :
         fCorrupted = 1
-        print("CORR\n");
 
     if cAvailable.value==0 :
         continue
@@ -109,16 +83,11 @@ while True:
     cSamples += cAvailable.value
     ser.write((str([ '{0:+.4f}'.format(round(elem, 4)) for elem in rgdSamples[cStart:cSamples] ]).strip('[]').replace(" ", "").replace("'", "")+",").encode("ascii"))
     
-    cStart += cAvailable.value;
-    
-    # hl.set_ydata(rgdSamples)
-    # plt.draw()
-    # plt.pause(0.01)
+    cStart += cAvailable.value
 
     if (cSamples >= nSamples):
         cSamples = 0;
-        cStart = 0;
-    
+        cStart = 0; 
 
 dwf.FDwfAnalogOutReset(hdwf, c_int(0))
 dwf.FDwfDeviceCloseAll()
@@ -128,13 +97,3 @@ if fLost:
     print("Samples were lost! Reduce frequency")
 if fCorrupted:
     print("Samples could be corrupted! Reduce frequency")
-
-f = open("record.csv", "w")
-for v in rgdSamples:
-    f.write("%s\n" % v)
-f.close()
-  
-# plt.plot(numpy.fromiter(rgdSamples, dtype = numpy.float))
-# plt.show()
-
-
