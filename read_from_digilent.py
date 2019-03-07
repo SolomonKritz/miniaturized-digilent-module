@@ -3,7 +3,7 @@
    Author:  Digilent, Inc.
    Revision:  2018-07-19
 
-   Requires:                       
+   Requires:
        Python 2.7, 3
 """
 
@@ -26,7 +26,7 @@ else:
 #declare ctype variables
 hdwf = c_int()
 sts = c_byte()
-hzAcq = c_double(100)
+hzAcq = c_double(1)
 nSamples = 2000
 rgdSamples = (c_double*nSamples)()
 cAvailable = c_int()
@@ -89,7 +89,7 @@ while True:
         continue
 
     dwf.FDwfAnalogInStatusRecord(hdwf, byref(cAvailable), byref(cLost), byref(cCorrupted))
-    
+
     cSamples += cLost.value
 
     if cLost.value :
@@ -105,12 +105,12 @@ while True:
     if cSamples+cAvailable.value > nSamples :
         cAvailable = c_int(nSamples-cSamples)
     dwf.FDwfAnalogInStatusData(hdwf, c_int(0), byref(rgdSamples, sizeof(c_double)*cSamples), cAvailable) # get channel 1 data
-    
+
     cSamples += cAvailable.value
     ser.write((str([ '{0:+.4f}'.format(round(elem, 4)) for elem in rgdSamples[cStart:cSamples] ]).strip('[]').replace(" ", "").replace("'", "")+",").encode("ascii"))
-    
+
     cStart += cAvailable.value;
-    
+
     # hl.set_ydata(rgdSamples)
     # plt.draw()
     # plt.pause(0.01)
@@ -118,7 +118,16 @@ while True:
     if (cSamples >= nSamples):
         cSamples = 0;
         cStart = 0;
-    
+
+    # Check if there are an control commands waiting on serial
+    if (ser.in_waiting() > 0):
+        # Read control commnads
+        buf = ser.readline()
+        if buf:
+            items = buf.split(',')
+            # Set new sampling rate, DLA functionality not supported yet
+            hzAcq = c_double(float(items[1]))
+            dwf.FDwfAnalogInFrequencySet(hdwf, hzAcq)
 
 dwf.FDwfAnalogOutReset(hdwf, c_int(0))
 dwf.FDwfDeviceCloseAll()
@@ -133,8 +142,6 @@ f = open("record.csv", "w")
 for v in rgdSamples:
     f.write("%s\n" % v)
 f.close()
-  
+
 # plt.plot(numpy.fromiter(rgdSamples, dtype = numpy.float))
 # plt.show()
-
-
