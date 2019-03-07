@@ -16,22 +16,14 @@ import numpy as np
 import pyqtgraph as pg
 import csv
 import sys
-import requests
 import socket
 import select
-import pickle
 import time
 import os.path
 import serial
-from apiclient.http import MediaFileUpload
-from apiclient.errors import HttpError
-from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
 import functools
 
-SERIAL_PORT = '/dev/cu.usbmodem14101'
-FILE_ID = '1HU_ahCgcivR51r-by7CdfBLhrCdyBnKqaDHfYsEUl0g'
+SERIAL_PORT = sys.argv[1]
 
 data1 = []
 data2 = []
@@ -40,41 +32,21 @@ p1_op = 0
 p1_size = 20
 p2_op = 0
 p2_size = 20
-ser = serial.Serial(SERIAL_PORT, 19200, timeout=60)  # open serial port at baudrate 19200 with timeout = 1 minute
-app = QtGui.QApplication([])
 
-def authorize():
-    creds = None
-    # The file token.pickle stores the user's access and refresh tokens, and is
-    # created automatically when the authorization flow completes for the first
-    # time.
-    if os.path.exists('token.pickle'):
-        with open('token.pickle', 'rb') as token:
-            creds = pickle.load(token)
-    # If there are no (valid) credentials available, let the user log in.
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                'credentials.json', SCOPES)
-            creds = flow.run_local_server()
-        # Save the credentials for the next run
-        with open('token.pickle', 'wb') as token:
-            pickle.dump(creds, token)
-    return creds
+try:
+    ser = serial.Serial(SERIAL_PORT, 19200, timeout=60)  # open serial port at baudrate 19200 with timeout = 1 minute
+except serial.serialutil.SerialException:
+    print("No connection found at: " + SERIAL_PORT)
+    sys.exit()
+
+app = QtGui.QApplication([])
 
 def get_data():
     global ser
     global csv_line_idx
     if (not ser.is_open):
         ser.open()
-    # creds = authorize();
-    # service = build('drive', 'v3', credentials=creds)
-    # try:
-    #     res = service.files().export(fileId=FILE_ID, mimeType='text/csv').execute()
-    # except HttpError, error:
-    #     print(error)
+
     line = ser.read(160)
     if line:
         items = line.split(',')
@@ -86,55 +58,12 @@ def get_data():
             except ValueError:
                 print("boo")
             csv_line_idx += 1
-    # if res:
-    #     for line in res.split('\n'):
-    #         items = line.split(',')
-    #         if (ptr >= csv_line_idx):
-    #             if ptr != 0:
-    #                 try:
-    #                     data1.append(float(items[1]))
-    #                     data2.append(float(items[2]))
-    #                 except ValueError:
-    #                     print("boo")
-    #             csv_line_idx += 1
-    #         ptr += 1
 
 # get_data()
 
 data_timer = QtCore.QTimer()
 data_timer.timeout.connect(get_data)
 data_timer.start(1000)
-
-#print decoded.splitlines()
-
-# with open(sys.argv[1]) as csv_file:
-#     csv_reader = csv.reader(csv_file, delimiter=',')
-#     for line in csv_reader:
-#         if csv_line_idx != 0:
-#             try:
-#                 data1.append(float(line[1]))
-#                 data2.append(float(line[2]))
-#             except ValueError:
-#                 print("boo")
-#         csv_line_idx += 1
-#     csv_file.close()
-
-def csv_update():
-    ptr = 0
-    global csv_line_idx
-    with open(sys.argv[1]) as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter=',')
-        for line in csv_reader:
-            if (ptr >= csv_line_idx):
-                data1.append(line[1])
-                data2.append(line[2])
-                csv_line_idx += 1
-            ptr += 1
-        csv_file.close()
-
-csv_timer = QtCore.QTimer()
-csv_timer.timeout.connect(csv_update)
-# csv_timer.start(200)
 
 def csv_network():
     ready = ready = select.select([server_socket], [], [], 1)
