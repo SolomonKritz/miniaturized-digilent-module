@@ -1,27 +1,25 @@
-// Feather9x_TX
+// Feather9x_RX
 // -*- mode: C++ -*-
-// Example sketch showing how to create a simple messaging client (transmitter)
+// Example sketch showing how to create a simple messaging client (receiver)
 // with the RH_RF95 class. RH_RF95 class does not provide for addressing or
 // reliability, so you should only use RH_RF95 if you do not need the higher
 // level messaging abilities.
-// It is designed to work with the other example Feather9x_RX
+// It is designed to work with the other example Feather9x_TX
 
 #include <SPI.h>
 #include <RH_RF95.h>
 
 #define MSG_SIZE 80
-
-/* for feather32u4
+/* for Feather32u4 RFM9x
 #define RFM95_CS 8
 #define RFM95_RST 4
 #define RFM95_INT 7
 */
 
-// for feather m0
+// for feather m0 RFM9x
 #define RFM95_CS 8
 #define RFM95_RST 4
 #define RFM95_INT 3
-
 
 /* for shield
 #define RFM95_CS 10
@@ -73,8 +71,12 @@
 // Singleton instance of the radio driver
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
+// Blinky on receipt
+#define LED 13
+
 void setup()
 {
+  pinMode(LED, OUTPUT);
   pinMode(RFM95_RST, OUTPUT);
   digitalWrite(RFM95_RST, HIGH);
 
@@ -82,10 +84,9 @@ void setup()
   while (!Serial) {
     delay(1);
   }
-
   delay(100);
 
-  Serial.println("Feather LoRa TX Test!");
+//  Serial.println("Feather LoRa RX Test!");
 
   // manual reset
   digitalWrite(RFM95_RST, LOW);
@@ -94,17 +95,17 @@ void setup()
   delay(10);
 
   while (!rf95.init()) {
-    Serial.println("LoRa radio init failed");
+//    Serial.println("LoRa radio init failed");
     while (1);
   }
-  Serial.println("LoRa radio init OK!");
+//  Serial.println("LoRa radio init OK!");
 
   // Defaults after init are 434.0MHz, modulation GFSK_Rb250Fd250, +13dbM
   if (!rf95.setFrequency(RF95_FREQ)) {
-    Serial.println("setFrequency failed");
+//    Serial.println("setFrequency failed");
     while (1);
   }
-  Serial.print("Set Freq to: "); Serial.println(RF95_FREQ);
+//  Serial.print("Set Freq to: "); Serial.println(RF95_FREQ);
 
   // Defaults after init are 434.0MHz, 13dBm, Bw = 125 kHz, Cr = 4/5, Sf = 128chips/symbol, CRC on
 
@@ -113,7 +114,6 @@ void setup()
   // you can set transmitter powers from 5 to 23 dBm:
   rf95.setTxPower(23, false);
 }
-
 
 void loop()
 {
@@ -126,7 +126,7 @@ void loop()
     if (rf95.recv(buf, &len))
       Serial.write((char*)buf, len);
   }
-  // Check if Digilent has data packet to send
+  // Check if PC has control packet to send
   if (Serial.available())
   {
     uint8_t buf[MSG_SIZE];
@@ -140,7 +140,7 @@ void loop()
         index++;
       }
     }
-    // Send data packet over the radio
+    // Send control packet over the radio
     rf95.send(buf, index);
   }
 }
